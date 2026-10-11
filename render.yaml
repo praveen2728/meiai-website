@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: meiai-frontend
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://meiai-api.onrender.com
