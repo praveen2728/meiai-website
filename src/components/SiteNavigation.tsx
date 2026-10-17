@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 
 const projects = [
   { label: "Azure Cloud Security", href: "/labs/azure-security-journey" },
+  { label: "Azure Security Simulator", href: "/azure-security-simulator" },
   { label: "AI Security Lab", href: "/lab" },
   { label: "Detection & SOC Lab", href: "/detection-soc" },
   { label: "Multi-Cloud Security Architecture", href: "/multicloud" },

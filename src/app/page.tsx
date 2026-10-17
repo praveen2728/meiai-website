@@ -146,6 +146,7 @@ export default function Home() {
                 <h3>Cloud security,<br /><em>by design.</em></h3>
                 <p>Explore Azure architecture, identity and workload security through a simulated journey, implementation guides, and synthetic assessment scenarios. It does not connect to a live tenant.</p>
                 <a className="use-case-link" href="/labs/azure-security-journey">Start the Azure Security Journey <Arrow /></a>
+                <a className="use-case-link" href="/azure-security-simulator">Try the Azure Security Simulator <Arrow /></a>
                 <a className="use-case-link" href="/cloud-security">Open the synthetic Azure walkthrough <Arrow /></a>
               </div>
               <div className="topic-rail"><p>AREAS OF FOCUS</p><ul>{azureTopics.map((topic) => <li key={topic}>{topic}</li>)}</ul></div>

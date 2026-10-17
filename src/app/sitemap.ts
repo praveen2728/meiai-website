@@ -6,6 +6,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
     ["/", "weekly", 1],
     ["/labs/azure-security-journey", "weekly", 0.9],
+    ["/azure-security-simulator", "weekly", 0.9],
     ["/lab", "weekly", 0.9],
     ["/detection-soc", "monthly", 0.8],
     ["/multicloud", "monthly", 0.8],
