@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description: "Model Azure architecture, report security control posture, inspect potential gaps, and plan a proposed target state. No tenant connection required.",
 };
 
-export default function AzureSecuritySimulatorPage() {
-  return <AzureSecuritySimulator />;
+export default async function AzureSecuritySimulatorPage({ searchParams }: { searchParams: Promise<{ control?: string | string[]; addComponent?: string | string[] }> }) {
+  const params = await searchParams;
+  return <AzureSecuritySimulator initialControl={params.control} initialComponent={params.addComponent} />;
 }

@@ -71,3 +71,10 @@ test('saved state normalization rejects unknown ids and invalid status values', 
   assert.equal(normalized.statuses['NET-01'], undefined);
   assert.ok(simulatorControls.every((item) => item.id));
 });
+
+test('detailed assessment depth persists and component control references resolve', () => {
+  const normalized = normalizeSimulatorState({ ...structuredClone(initialSimulatorState), assessmentDepth: 'detailed' });
+  assert.equal(normalized.assessmentDepth, 'detailed');
+  const controlIds = new Set(simulatorControls.map((item) => item.id));
+  for (const component of simulatorComponents) assert.ok(component.controls.every((id) => controlIds.has(id)), `${component.id} has an invalid question mapping`);
+});

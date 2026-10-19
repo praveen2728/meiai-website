@@ -6,15 +6,16 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 const projects = [
-  { label: "Azure Cloud Security", href: "/labs/azure-security-journey" },
-  { label: "Azure Security Simulator", href: "/azure-security-simulator" },
-  { label: "AI Security Lab", href: "/lab" },
   { label: "Detection & SOC Lab", href: "/detection-soc" },
   { label: "Multi-Cloud Security Architecture", href: "/multicloud" },
 ];
 
 const destinations = [
   { label: "Home", href: "/" },
+  { label: "Azure Security Journey", href: "/labs/azure-security-journey" },
+  { label: "Azure + Microsoft 365 Simulator", href: "/azure-security-simulator" },
+  { label: "Learn", href: "/learn" },
+  { label: "AI Security Lab", href: "/lab" },
   ...projects,
   { label: "Security Recommendations", href: "/security-recommendations" },
   { label: "Methodology", href: "/methodology" },
@@ -61,9 +62,13 @@ export default function SiteNavigation({ theme = "light", action, skipTarget = "
         </Link>
         <nav className={`desktop-nav ${isDark ? "!text-slate-300" : ""}`} aria-label="Main navigation">
           <Link href="/" aria-current={current("/") ? "page" : undefined} className={current("/") ? activeColor : linkColor}>Home</Link>
+          <Link href="/labs/azure-security-journey" aria-current={current("/labs/azure-security-journey") ? "page" : undefined} className={current("/labs/azure-security-journey") ? activeColor : linkColor}>Azure Security Journey</Link>
+          <Link href="/azure-security-simulator" aria-current={current("/azure-security-simulator") ? "page" : undefined} className={current("/azure-security-simulator") ? activeColor : linkColor}>Security Simulator</Link>
+          <Link href="/learn" aria-current={current("/learn") ? "page" : undefined} className={current("/learn") ? activeColor : linkColor}>Learn</Link>
+          <Link href="/lab" aria-current={current("/lab") ? "page" : undefined} className={current("/lab") ? activeColor : linkColor}>AI Security Lab</Link>
           <div className="nav-projects">
             <button ref={projectsTrigger} type="button" aria-expanded={projectsOpen} aria-controls="projects-navigation" onClick={() => setProjectsOpen((open) => !open)} className={`${activeProject ? activeColor : linkColor} inline-flex items-center gap-1`}>
-              Projects <span aria-hidden="true">⌄</span>
+              More <span aria-hidden="true">⌄</span>
             </button>
             <div id="projects-navigation" hidden={!projectsOpen} className={`nav-projects-menu ${isDark ? "nav-projects-menu-dark" : ""}`}>
               {projects.map((project) => <Link key={project.href} href={project.href} aria-current={projectIsCurrent(project.href) ? "page" : undefined} onClick={() => setProjectsOpen(false)} className={projectIsCurrent(project.href) ? "nav-link-active" : ""}>{project.label}</Link>)}

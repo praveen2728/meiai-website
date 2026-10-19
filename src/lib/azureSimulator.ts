@@ -1,8 +1,22 @@
+import { m365Components, m365Controls } from "./m365SecurityData.ts";
+import { selectApplicableQuestions } from "./securityAssessmentEngine.ts";
+
 export type EnvironmentProfile = "startup" | "landing-zone" | "hybrid" | "multi-subscription";
 export type WorkloadProfile = "web-app" | "data-analytics" | "containers" | "identity-centric" | "hybrid-workloads";
+export type PlatformScope = "azure" | "m365" | "combined";
+export type ProductPlatform = "azure" | "m365" | "shared";
 export type ControlStatus = "implemented" | "partial" | "missing" | "unknown" | "na";
+export type AssessmentDepth = "quick" | "detailed";
 export type Severity = "High" | "Medium" | "Low";
-export type Boundary = "Identity" | "Governance" | "Network" | "Workload" | "Data" | "Operations";
+export type Boundary = "Identity" | "Governance" | "Network" | "Workload" | "Data" | "Operations" | "Collaboration" | "Endpoint" | "Compliance";
+export type RelationshipKind = "Identity access" | "Network path" | "Data access" | "Telemetry";
+
+export interface SimulatorRelationship {
+  id: string;
+  from: string;
+  to: string;
+  kind: RelationshipKind;
+}
 
 export interface SimulatorControl {
   id: string;
@@ -19,6 +33,11 @@ export interface SimulatorControl {
   validation: string;
   frameworks: string[];
   references: { label: string; url: string }[];
+  platform?: ProductPlatform;
+  capability?: string;
+  dependsOn?: { controlId: string; statuses: ControlStatus[] };
+  whyAsked?: string;
+  questionVersion?: string;
 }
 
 export interface SimulatorComponent {
@@ -28,13 +47,22 @@ export interface SimulatorComponent {
   description: string;
   controls: string[];
   workloads: WorkloadProfile[] | "all";
+  platform?: ProductPlatform;
+  icon?: string;
 }
 
 export interface SimulatorState {
+  platform?: PlatformScope;
+  assessmentDepth?: AssessmentDepth;
   environment: EnvironmentProfile;
   workloads: WorkloadProfile[];
   components: string[];
   statuses: Record<string, ControlStatus>;
+  relationships?: SimulatorRelationship[];
+  licenses?: string[];
+  licensePopulations?: Record<string, number>;
+  unsureQuestions?: string[];
+  skippedQuestions?: string[];
 }
 
 export interface SimulatorFinding {
@@ -70,7 +98,7 @@ export const workloadProfiles: { id: WorkloadProfile; name: string; detail: stri
   { id: "hybrid-workloads", name: "Hybrid enterprise workloads", detail: "Azure and on-premises systems with shared operational dependencies." },
 ];
 
-export const simulatorComponents: SimulatorComponent[] = [
+const azureSimulatorComponents: SimulatorComponent[] = [
   { id: "entra", name: "Microsoft Entra ID", boundary: "Identity", description: "Provide workforce and workload identity with explicit authentication and authorization decisions.", controls: ["IAM-01", "IAM-02", "IAM-03", "IAM-04"], workloads: "all" },
   { id: "management-groups", name: "Management groups", boundary: "Governance", description: "Group subscriptions under an agreed policy and ownership hierarchy.", controls: ["GOV-01"], workloads: "all" },
   { id: "azure-policy", name: "Azure Policy", boundary: "Governance", description: "Audit or enforce approved resource configuration at the chosen scope.", controls: ["GOV-01"], workloads: "all" },
@@ -88,7 +116,24 @@ export const simulatorComponents: SimulatorComponent[] = [
   { id: "defender", name: "Defender for Cloud", boundary: "Operations", description: "Posture and workload protection capabilities depend on selected plans and licensing.", controls: ["POST-01"], workloads: "all" },
   { id: "log-analytics", name: "Log Analytics workspace", boundary: "Operations", description: "Collect selected Azure logs; ingestion and retention affect cost.", controls: ["LOG-01", "LOG-02", "LOG-03"], workloads: "all" },
   { id: "sentinel", name: "Microsoft Sentinel", boundary: "Operations", description: "Build SIEM detections and response workflows over selected telemetry.", controls: ["LOG-01", "LOG-03"], workloads: "all" },
+  { id: "subscriptions", name: "Azure subscriptions", boundary: "Governance", description: "Separate billing, policy, access and workload ownership boundaries within a tenant.", controls: ["GOV-01", "IAM-03"], workloads: "all" },
+  { id: "managed-identity", name: "Managed identities", boundary: "Identity", description: "Provide Azure-hosted workloads with Microsoft Entra identities without storing application secrets.", controls: ["IAM-04"], workloads: ["web-app", "data-analytics", "containers", "hybrid-workloads"] },
+  { id: "functions", name: "Azure Functions", boundary: "Workload", description: "Run event-driven code with explicit identity, network, dependency and logging decisions.", controls: ["APP-01", "IAM-04", "LOG-02"], workloads: ["web-app", "data-analytics"] },
+  { id: "container-apps", name: "Azure Container Apps", boundary: "Workload", description: "Run containerized applications on a managed platform; image, identity and ingress controls still apply.", controls: ["APP-01", "IAM-04", "NET-02"], workloads: ["containers", "web-app"] },
+  { id: "container-registry", name: "Azure Container Registry", boundary: "Workload", description: "Store container images with access, image provenance, scanning and deployment controls.", controls: ["APP-01", "IAM-03"], workloads: ["containers"] },
+  { id: "api-management", name: "Azure API Management", boundary: "Workload", description: "Publish and govern APIs; authentication, authorization, exposure and backend paths require design.", controls: ["APP-01", "NET-04", "LOG-02"], workloads: ["web-app", "hybrid-workloads"] },
+  { id: "private-dns", name: "Private DNS zones", boundary: "Network", description: "Resolve private endpoint names from intended network locations; links and forwarding must be planned.", controls: ["NET-03"], workloads: ["web-app", "data-analytics", "containers", "hybrid-workloads"] },
+  { id: "vpn-gateway", name: "VPN Gateway", boundary: "Network", description: "Connect Azure virtual networks and remote networks using an explicitly managed tunnel design.", controls: ["NET-02"], workloads: ["hybrid-workloads"] },
+  { id: "front-door", name: "Azure Front Door with WAF", boundary: "Network", description: "Provide global application entry and web application firewall capabilities when the traffic architecture fits.", controls: ["NET-04"], workloads: ["web-app"] },
+  { id: "cosmos-db", name: "Azure Cosmos DB", boundary: "Data", description: "Store globally distributed data with explicit identity, network, backup and consistency decisions.", controls: ["DATA-02", "DATA-03", "NET-03", "LOG-02"], workloads: ["web-app", "data-analytics"] },
+  { id: "sql-managed-instance", name: "Azure SQL Managed Instance", boundary: "Data", description: "Run managed SQL workloads with network, identity, auditing and migration dependencies.", controls: ["DATA-02", "DATA-03", "NET-03", "LOG-02"], workloads: ["web-app", "hybrid-workloads"] },
+  { id: "azure-monitor", name: "Azure Monitor", boundary: "Operations", description: "Collect and route selected platform and application telemetry; retention and ingestion affect cost.", controls: ["LOG-01", "LOG-02"], workloads: "all" },
+  { id: "activity-logs", name: "Azure Activity Logs", boundary: "Operations", description: "Record subscription-level control-plane events and route them to appropriate retention and monitoring destinations.", controls: ["LOG-01"], workloads: "all" },
+  { id: "azure-backup", name: "Azure Backup", boundary: "Operations", description: "Protect selected workloads with recovery points; immutability, access and restore testing need separate validation.", controls: [], workloads: "all" },
+  { id: "devops-pipeline", name: "CI/CD pipeline", boundary: "Operations", description: "Automate builds and deployments with reviewed identities, protected branches, artifact checks and approvals.", controls: ["APP-01"], workloads: "all" },
 ];
+
+export const simulatorComponents: SimulatorComponent[] = [...azureSimulatorComponents.map((item) => ({ ...item, platform: item.id === "entra" ? "shared" as const : "azure" as const })), ...m365Components];
 
 const refs = {
   mfa: { label: "Microsoft Entra MFA", url: "https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mfa-howitworks" },
@@ -111,9 +156,9 @@ const refs = {
   caf: { label: "Azure landing zones", url: "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/" },
 };
 
-const control = (data: Omit<SimulatorControl, "workloads"> & { workloads?: SimulatorControl["workloads"] }): SimulatorControl => ({ workloads: "all", ...data });
+const control = (data: Omit<SimulatorControl, "workloads"> & { workloads?: SimulatorControl["workloads"] }): SimulatorControl => ({ platform: "azure", workloads: "all", questionVersion: "1.0", ...data });
 
-export const simulatorControls: SimulatorControl[] = [
+const azureSimulatorControls: SimulatorControl[] = [
   control({ id: "IAM-01", name: "Require strong MFA for privileged access", domain: "Identity and privileged access", question: "Are administrator accounts protected by MFA with monitored emergency-access exclusions?", risk: "A stolen administrator credential may bypass a password-only boundary.", baseSeverity: "High", components: ["entra"], affectedComponents: ["entra"], targetComponents: ["entra"], remediation: "Require phishing-resistant MFA for privileged roles where supported. Pilot Conditional Access in report-only mode, document break-glass controls, then phase enforcement.", validation: "Review sign-in logs and policy results for administrator accounts; test emergency access and confirm alerts.", frameworks: ["MCSB v1 topic: identity and access", "Zero Trust: verify explicitly"], references: [refs.mfa, refs.mcsb] }),
   control({ id: "IAM-02", name: "Use time-bound privileged access", domain: "Identity and privileged access", question: "Are privileged Azure roles assigned only at the required scope and activated just in time where appropriate?", risk: "Standing or broadly scoped privilege increases the impact of account compromise.", baseSeverity: "High", components: ["entra"], affectedComponents: ["entra", "management-groups"], targetComponents: ["management-groups"], remediation: "Inventory role assignments, remove stale grants, scope roles narrowly and use PIM-eligible access with approval and expiry where licensed and justified.", validation: "Export role assignments at management-group, subscription and resource scopes; verify activation, approval and audit history.", frameworks: ["MCSB v1 topic: identity and access"], references: [refs.pim, refs.rbac, refs.mcsb] }),
   control({ id: "IAM-03", name: "Scope Azure RBAC to least privilege", domain: "Identity and privileged access", question: "Are workload and human role assignments limited to the permissions and resource scope they need?", risk: "Broad roles such as Owner or Contributor can allow unnecessary changes across resources.", baseSeverity: "High", components: ["entra", "management-groups"], affectedComponents: ["entra", "management-groups"], targetComponents: ["management-groups"], remediation: "Replace broad built-in roles with narrower built-in or reviewed custom roles and assign at the smallest practical scope.", validation: "Test expected read/write tasks and denied cross-scope tasks; inspect role assignment change logs.", frameworks: ["MCSB v1 topic: identity and access"], references: [refs.rbac, refs.mcsb] }),
@@ -134,6 +179,8 @@ export const simulatorControls: SimulatorControl[] = [
   control({ id: "APP-01", name: "Patch and scan workload components", domain: "Workload and application security", question: "Are operating systems, container images, runtimes and application dependencies scanned and patched on an owned schedule?", risk: "Known vulnerable components may remain exploitable when ownership and update windows are unclear.", baseSeverity: "Medium", workloads: ["web-app", "data-analytics", "containers", "hybrid-workloads"], components: ["app-service", "virtual-machines", "aks"], affectedComponents: ["app-service", "virtual-machines", "aks"], targetComponents: [], remediation: "Assign patch ownership per service, define severity-based remediation windows and test updates through a representative deployment path.", validation: "Review a recent patch or image scan, confirm remediation tracking and test application health after an update.", frameworks: ["MCSB v1 topic: workload security"], references: [refs.patch, refs.mcsb] }),
 ];
 
+export const simulatorControls: SimulatorControl[] = [...azureSimulatorControls, ...m365Controls];
+
 export const controlStatuses: { id: ControlStatus; label: string }[] = [
   { id: "implemented", label: "Implemented" },
   { id: "partial", label: "Partially implemented" },
@@ -153,38 +200,57 @@ export const simulatorReferences = [
 export const simulatorReferenceNote = "Framework labels identify related topic areas, not clause-level mappings. They do not imply compliance, certification or proof that controls are effective.";
 
 export const initialSimulatorState: SimulatorState = {
+  platform: "azure",
+  assessmentDepth: "quick",
   environment: "startup",
   workloads: ["web-app"],
   components: ["entra", "vnet", "nsg", "waf", "app-service", "sql", "storage", "key-vault", "private-endpoint", "defender", "log-analytics"],
   statuses: {},
+  relationships: [],
+  licenses: [],
+  licensePopulations: {},
+  unsureQuestions: [],
+  skippedQuestions: [],
 };
 
 export function normalizeSimulatorState(value: unknown): SimulatorState {
   if (!value || typeof value !== "object") return structuredClone(initialSimulatorState);
   const input = value as Partial<SimulatorState>;
   const validEnvironments = environmentProfiles.map((item) => item.id);
+  const validPlatforms = new Set(["azure", "m365", "combined"]);
   const validWorkloads = workloadProfiles.map((item) => item.id);
   const validComponents = new Set(simulatorComponents.map((item) => item.id));
   const validStatus = new Set<ControlStatus>(controlStatuses.map((item) => item.id));
+  const validControlIds = new Set(simulatorControls.map((item) => item.id));
+  const validRelationshipKinds = new Set<RelationshipKind>(["Identity access", "Network path", "Data access", "Telemetry"]);
   const statuses: Record<string, ControlStatus> = {};
   for (const controlItem of simulatorControls) {
     const value = input.statuses?.[controlItem.id];
     if (value && validStatus.has(value)) statuses[controlItem.id] = value;
   }
+  const components = Array.isArray(input.components) ? [...new Set(input.components.filter((item): item is string => typeof item === "string" && validComponents.has(item)))] : [...initialSimulatorState.components];
   return {
+    platform: validPlatforms.has(input.platform ?? "azure") ? input.platform ?? "azure" : "azure",
+    assessmentDepth: input.assessmentDepth === "detailed" ? "detailed" : "quick",
     environment: validEnvironments.includes(input.environment as EnvironmentProfile) ? input.environment as EnvironmentProfile : initialSimulatorState.environment,
     workloads: Array.isArray(input.workloads) ? [...new Set(input.workloads.filter((item): item is WorkloadProfile => validWorkloads.includes(item as WorkloadProfile)))] : [...initialSimulatorState.workloads],
-    components: Array.isArray(input.components) ? [...new Set(input.components.filter((item): item is string => typeof item === "string" && validComponents.has(item)))] : [...initialSimulatorState.components],
+    components,
     statuses,
+    relationships: Array.isArray(input.relationships) ? input.relationships.filter((relationship): relationship is SimulatorRelationship => Boolean(
+      relationship && typeof relationship === "object" && typeof relationship.id === "string" &&
+      typeof relationship.from === "string" && components.includes(relationship.from) &&
+      typeof relationship.to === "string" && components.includes(relationship.to) &&
+      relationship.from !== relationship.to && validRelationshipKinds.has(relationship.kind),
+    )).map((relationship) => ({ ...relationship })) : [],
+    licenses: Array.isArray(input.licenses) ? [...new Set(input.licenses.filter((id): id is string => typeof id === "string" && ["m365-e3", "m365-e5", "m365-e7", "o365-e3", "o365-e5", "business-premium", "defender-suite", "purview-suite", "entra-suite", "intune-suite", "custom", "unknown"].includes(id)))] : [],
+    licensePopulations: input.licensePopulations && typeof input.licensePopulations === "object" ? Object.fromEntries(Object.entries(input.licensePopulations).filter(([key, value]) => typeof key === "string" && typeof value === "number" && Number.isFinite(value) && value >= 0).slice(0, 20)) : {},
+    unsureQuestions: Array.isArray(input.unsureQuestions) ? [...new Set(input.unsureQuestions.filter((id): id is string => typeof id === "string" && validControlIds.has(id) && statuses[id] === "unknown"))] : [],
+    skippedQuestions: Array.isArray(input.skippedQuestions) ? [...new Set(input.skippedQuestions.filter((id): id is string => typeof id === "string" && validControlIds.has(id) && statuses[id] === "unknown"))] : [],
   };
 }
 
 export function getRelevantControls(state: SimulatorState): SimulatorControl[] {
-  return simulatorControls.filter((item) => {
-    const workloadMatch = item.workloads === "all" || item.workloads.some((id) => state.workloads.includes(id));
-    const componentMatch = item.components.length === 0 || item.components.some((id) => state.components.includes(id));
-    return workloadMatch && componentMatch;
-  });
+  return selectApplicableQuestions(simulatorControls, state);
 }
 
 function severityFor(controlItem: SimulatorControl, status: ControlStatus): Severity {
@@ -237,7 +303,15 @@ export function getTargetComponentIds(state: SimulatorState, findings = deriveSi
 
 export function summarizeSimulator(state: SimulatorState) {
   const relevant = getRelevantControls(state);
-  const counts = { implemented: 0, partial: 0, missing: 0, unknown: 0, na: 0 };
-  for (const item of relevant) counts[state.statuses[item.id] ?? "unknown"] += 1;
+  const unsure = new Set(state.unsureQuestions ?? []);
+  const skipped = new Set(state.skippedQuestions ?? []);
+  const counts = { implemented: 0, partial: 0, missing: 0, unknown: 0, unsure: 0, skipped: 0, na: 0 };
+  for (const item of relevant) {
+    const status = state.statuses[item.id] ?? "unknown";
+    if (status !== "unknown") counts[status] += 1;
+    else if (skipped.has(item.id)) counts.skipped += 1;
+    else if (unsure.has(item.id)) counts.unsure += 1;
+    else counts.unknown += 1;
+  }
   return { total: relevant.length, counts, findings: deriveSimulatorFindings(state).length, unknown: counts.unknown };
 }
