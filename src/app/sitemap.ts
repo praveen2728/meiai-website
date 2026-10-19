@@ -19,6 +19,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...routes.map(([path, changeFrequency, priority]) => ({ url: `${base}${path}`, changeFrequency, priority })),
     ...recommendationArticles.filter((article) => article.status === "Published").map((article) => ({ url: `${base}/security-recommendations/${article.slug}`, lastModified: new Date(`${article.lastReviewedAt}T12:00:00Z`), changeFrequency: "monthly" as const, priority: 0.7 })),
-    ...learnArticles.map((article) => ({ url: `${base}/learn/${article.slug}`, lastModified: new Date(`${article.verified}T12:00:00Z`), changeFrequency: "monthly" as const, priority: 0.7 })),
+    ...learnArticles.map((article) => ({ url: `${base}/learn/${article.slug}`, lastModified: new Date(`${article.updated}T12:00:00Z`), changeFrequency: "monthly" as const, priority: 0.7 })),
   ];
 }

@@ -6,7 +6,7 @@ export type LearnArticle = {
   description: string;
   componentIds: string[];
   questionIds: string[];
-  verified: string;
+  updated: string;
   sections: { title: string; paragraphs: string[]; bullets?: string[] }[];
   references: { label: string; url: string }[];
 };
@@ -17,7 +17,7 @@ const zeroTrust = { label: "Microsoft Zero Trust guidance", url: "https://learn.
 /** Published articles are intentionally explicit; planned topics are not presented as finished pages. */
 export const learnArticles: LearnArticle[] = [
   {
-    slug: "entra-identity-and-access", title: "Microsoft Entra identity and access", platform: "Shared", domain: "Identity and access", description: "Design workforce and workload identity around explicit verification, least privilege, and reviewable access decisions.", componentIds: ["entra", "entra-ca"], questionIds: ["IAM-01", "IAM-02", "IAM-03", "M365-IAM-01", "M365-ADM-01"], verified: "2026-10-19",
+    slug: "entra-identity-and-access", title: "Microsoft Entra identity and access", platform: "Shared", domain: "Identity and access", description: "Design workforce and workload identity around explicit verification, least privilege, and reviewable access decisions.", componentIds: ["entra", "entra-ca"], questionIds: ["IAM-01", "IAM-02", "IAM-03", "M365-IAM-01", "M365-ADM-01"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Microsoft Entra ID is the identity control plane used by Azure and Microsoft 365. It evaluates users, groups, devices, applications, and workload identities. Identity decisions should be treated as security boundaries, not as proof that a person or service is trustworthy.", "This topic matters to identity owners, platform engineers, administrators, and incident responders. The exact feature set depends on tenant licensing and assigned service plans."] },
       { title: "How it works", paragraphs: ["Authentication establishes an identity; authorization determines what it can do. Conditional Access can apply contextual requirements to supported sign-ins. Azure role-based access control (Azure RBAC) assigns permissions to Azure resources, while directory roles govern Microsoft Entra administration. These are related but distinct permission systems."], bullets: ["Use separate human and workload identities.", "Prefer managed identities or federated credentials over long-lived secrets where supported.", "Use scoped roles and time-bound administrative access where the applicable plan and process support it."] },
@@ -32,7 +32,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [zeroTrust, { label: "Microsoft Entra Conditional Access overview", url: "https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview" }, { label: "Azure RBAC best practices", url: "https://learn.microsoft.com/en-us/azure/role-based-access-control/best-practices" }, mcsb],
   },
   {
-    slug: "conditional-access", title: "Conditional Access and MFA", platform: "Microsoft 365", domain: "Identity and access", description: "Plan and validate context-based access policies without locking out administrators or users.", componentIds: ["entra", "entra-ca"], questionIds: ["M365-IAM-01", "M365-IAM-02", "M365-IAM-03", "IAM-01"], verified: "2026-10-19",
+    slug: "conditional-access", title: "Conditional Access and MFA", platform: "Microsoft 365", domain: "Identity and access", description: "Plan and validate context-based access policies without locking out administrators or users.", componentIds: ["entra", "entra-ca"], questionIds: ["M365-IAM-01", "M365-IAM-02", "M365-IAM-03", "IAM-01"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Conditional Access evaluates supported sign-ins and applies requirements such as multifactor authentication, compliant-device status, or session controls. It is a policy engine; selecting it in an architecture does not mean policies exist or cover users.", "Use it when an organization needs consistent access decisions across cloud applications and has owners for identity, devices, and exceptions."] },
       { title: "How it works", paragraphs: ["Policies combine assignments, conditions, and grant or session controls. Multiple policies can apply to a sign-in, and exclusions can materially change the result. Emergency access needs a separately designed, monitored path."], bullets: ["Inventory users, roles, apps, locations, and authentication paths.", "Use report-only and sign-in logs to evaluate effect before enforcement.", "Document emergency accounts and monitor their use."] },
@@ -43,7 +43,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [{ label: "Conditional Access overview", url: "https://learn.microsoft.com/en-us/entra/identity/conditional-access/overview" }, { label: "Conditional Access report-only mode", url: "https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-report-only" }, { label: "Authentication methods", url: "https://learn.microsoft.com/en-us/entra/identity/authentication/concept-authentication-methods" }],
   },
   {
-    slug: "azure-policy", title: "Azure Policy and governance", platform: "Azure", domain: "Cloud governance", description: "Use policy assignments and management boundaries to make configuration expectations visible and governable.", componentIds: ["azure-policy", "management-groups"], questionIds: ["GOV-01"], verified: "2026-10-19",
+    slug: "azure-policy", title: "Azure Policy and governance", platform: "Azure", domain: "Cloud governance", description: "Use policy assignments and management boundaries to make configuration expectations visible and governable.", componentIds: ["azure-policy", "management-groups"], questionIds: ["GOV-01"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Azure Policy evaluates resources against assigned definitions and can audit, deny, modify, or deploy related configuration depending on definition, effect, and resource support. It helps govern a fleet; it is not a substitute for design review or application authorization."] },
       { title: "How it works", paragraphs: ["Definitions are grouped into initiatives and assigned at management-group, subscription, or resource scope. Exemptions and remediation tasks need clear ownership. Some effects require managed identity permissions or have deployment timing and service-specific limitations."] },
@@ -54,7 +54,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [{ label: "Azure Policy overview", url: "https://learn.microsoft.com/en-us/azure/governance/policy/overview" }, { label: "Azure landing zones", url: "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/landing-zone/" }, mcsb],
   },
   {
-    slug: "network-security-groups", title: "Network security groups", platform: "Azure", domain: "Network security", description: "Understand how NSG rules filter supported traffic and how to validate the effective network path.", componentIds: ["vnet", "nsg"], questionIds: ["NET-01", "NET-02"], verified: "2026-10-19",
+    slug: "network-security-groups", title: "Network security groups", platform: "Azure", domain: "Network security", description: "Understand how NSG rules filter supported traffic and how to validate the effective network path.", componentIds: ["vnet", "nsg"], questionIds: ["NET-01", "NET-02"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Network security groups contain ordered allow and deny rules for supported inbound and outbound traffic at subnets or network interfaces. They help constrain network paths; they do not provide application-layer authorization or prove that an application is secure."] },
       { title: "Architecture and implementation", paragraphs: ["Create a flow inventory before writing rules. Prefer narrow source, destination, protocol, and port scopes. Review subnet and NIC associations, effective security rules, default rules, routing, and service-specific firewall controls together. Avoid broad management access from the internet."] },
@@ -64,7 +64,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [{ label: "Network security groups overview", url: "https://learn.microsoft.com/en-us/azure/virtual-network/network-security-groups-overview" }, { label: "Effective security rules", url: "https://learn.microsoft.com/en-us/azure/virtual-network/diagnose-network-traffic-filter-problem" }, mcsb],
   },
   {
-    slug: "private-endpoints-and-private-link", title: "Private Link and private endpoints", platform: "Azure", domain: "Network security", description: "Design private service connectivity with DNS, routing, authorization, and operational dependencies in view.", componentIds: ["private-endpoint", "vnet", "storage", "sql"], questionIds: ["NET-03"], verified: "2026-10-19",
+    slug: "private-endpoints-and-private-link", title: "Private Link and private endpoints", platform: "Azure", domain: "Network security", description: "Design private service connectivity with DNS, routing, authorization, and operational dependencies in view.", componentIds: ["private-endpoint", "vnet", "storage", "sql"], questionIds: ["NET-03"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Private Link provides private connectivity to supported Azure services through a private endpoint in a virtual network. It can reduce public network exposure, but it does not grant data authorization or automatically eliminate every public path."] },
       { title: "How it works", paragraphs: ["A private endpoint maps a service to a private IP in a virtual network. DNS determines whether clients resolve the service name to that address. Approval, network reachability, service settings, identity permissions, and failover behavior all affect the result."] },
@@ -74,7 +74,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [{ label: "Private Link overview", url: "https://learn.microsoft.com/en-us/azure/private-link/private-link-overview" }, { label: "Azure Private Endpoint DNS configuration", url: "https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns" }, mcsb],
   },
   {
-    slug: "azure-key-vault", title: "Azure Key Vault and secrets management", platform: "Azure", domain: "Secrets and keys", description: "Keep secrets and cryptographic material under scoped identity, logging, rotation, and recovery ownership.", componentIds: ["key-vault", "entra"], questionIds: ["DATA-03", "IAM-04", "LOG-02"], verified: "2026-10-19",
+    slug: "azure-key-vault", title: "Azure Key Vault and secrets management", platform: "Azure", domain: "Secrets and keys", description: "Keep secrets and cryptographic material under scoped identity, logging, rotation, and recovery ownership.", componentIds: ["key-vault", "entra"], questionIds: ["DATA-03", "IAM-04", "LOG-02"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Azure Key Vault stores secrets, keys, and certificates under access policies and service controls. A vault reduces the need to embed credentials in code, but applications still need correct identity, permissions, network access, rotation, and recovery design."] },
       { title: "Implementation", paragraphs: ["Choose the supported authorization model and least-privilege roles. Prefer managed identities for Azure-hosted workloads. Separate vaults or boundaries where ownership and risk require it; configure network access and diagnostic settings; define rotation and recovery owners; test restore and soft-delete behavior before production use."] },
@@ -84,7 +84,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [{ label: "Key Vault security features", url: "https://learn.microsoft.com/en-us/azure/key-vault/general/security-features" }, { label: "Managed identities overview", url: "https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview" }, { label: "Key Vault pricing", url: "https://azure.microsoft.com/en-us/pricing/details/key-vault/" }],
   },
   {
-    slug: "defender-for-cloud", title: "Microsoft Defender for Cloud", platform: "Azure", domain: "Cloud posture and workload protection", description: "Separate posture management from workload protection plans and govern recommendations by applicability and ownership.", componentIds: ["defender"], questionIds: ["POST-01", "APP-01"], verified: "2026-10-19",
+    slug: "defender-for-cloud", title: "Microsoft Defender for Cloud", platform: "Azure", domain: "Cloud posture and workload protection", description: "Separate posture management from workload protection plans and govern recommendations by applicability and ownership.", componentIds: ["defender"], questionIds: ["POST-01", "APP-01"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Defender for Cloud combines cloud security posture management capabilities with workload protection plans. The exact plans, supported resources, signals, and charges depend on current service offerings and subscription configuration."] },
       { title: "How it works", paragraphs: ["The service evaluates selected scopes, resources, and configuration against recommendations and supported threat-protection capabilities. Secure score is a prioritization signal, not a certification or direct probability of compromise. A recommendation requires applicability review and an accountable owner."] },
@@ -95,7 +95,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [{ label: "Defender for Cloud overview", url: "https://learn.microsoft.com/en-us/azure/defender-for-cloud/defender-for-cloud-introduction" }, { label: "Defender for Cloud pricing", url: "https://azure.microsoft.com/en-us/pricing/details/defender-for-cloud/" }, mcsb],
   },
   {
-    slug: "defender-for-office-365", title: "Defender for Office 365", platform: "Microsoft 365", domain: "Email and phishing protection", description: "Plan email threat protection by licensed scope, policy coverage, user reporting, and response ownership.", componentIds: ["defender-office", "exchange-online", "defender-xdr"], questionIds: ["M365-EXO-01", "M365-EXO-02", "M365-EXO-03"], verified: "2026-10-19",
+    slug: "defender-for-office-365", title: "Defender for Office 365", platform: "Microsoft 365", domain: "Email and phishing protection", description: "Plan email threat protection by licensed scope, policy coverage, user reporting, and response ownership.", componentIds: ["defender-office", "exchange-online", "defender-xdr"], questionIds: ["M365-EXO-01", "M365-EXO-02", "M365-EXO-03"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Defender for Office 365 provides email and collaboration threat-protection capabilities, including features whose availability differs by plan. It complements Exchange Online Protection and other mail controls; exact plan coverage must be checked for eligible users."] },
       { title: "Implementation", paragraphs: ["Confirm domains, accepted mail flow, license assignments, and security policy precedence. Review preset or custom protection policies, scope, exclusions, user reporting, investigation permissions, and alert routing. Start with supported evaluation and simulation approaches before making broad policy changes."] },
@@ -105,7 +105,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [{ label: "Defender for Office 365 overview", url: "https://learn.microsoft.com/en-us/defender-office-365/mdo-about" }, { label: "Exchange Online Protection overview", url: "https://learn.microsoft.com/en-us/defender-office-365/eop-about" }, { label: "Microsoft 365 security licensing guidance", url: "https://learn.microsoft.com/en-us/office365/servicedescriptions/microsoft-365-service-descriptions/microsoft-365-tenantlevel-services-licensing-guidance/microsoft-365-security-compliance-licensing-guidance" }],
   },
   {
-    slug: "purview-sensitivity-labels-and-dlp", title: "Microsoft Purview labels and DLP", platform: "Microsoft 365", domain: "Information protection", description: "Use classification and data-loss-prevention policies to express handling expectations across supported workloads.", componentIds: ["purview", "sharepoint-online", "onedrive", "teams"], questionIds: ["M365-DATA-01", "M365-DLP-01", "M365-DLP-02"], verified: "2026-10-19",
+    slug: "purview-sensitivity-labels-and-dlp", title: "Microsoft Purview labels and DLP", platform: "Microsoft 365", domain: "Information protection", description: "Use classification and data-loss-prevention policies to express handling expectations across supported workloads.", componentIds: ["purview", "sharepoint-online", "onedrive", "teams"], questionIds: ["M365-DATA-01", "M365-DLP-01", "M365-DLP-02"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Sensitivity labels classify content and can apply supported protections. Data Loss Prevention (DLP) policies detect or govern selected data movement. Workload support and policy behaviors vary; these features need data-owner decisions and licensing checks."] },
       { title: "How and where it works", paragraphs: ["A label taxonomy expresses how information should be handled. Policies publish labels to scoped users and workloads; DLP rules evaluate supported content and activity. Endpoint, Exchange, SharePoint, OneDrive, Teams, and other locations have different capabilities and prerequisites."] },
@@ -115,7 +115,7 @@ export const learnArticles: LearnArticle[] = [
     ], references: [{ label: "Microsoft Purview licensing", url: "https://learn.microsoft.com/en-us/purview/purview-licensing" }, { label: "Sensitivity labels", url: "https://learn.microsoft.com/en-us/purview/sensitivity-labels" }, { label: "Data Loss Prevention overview", url: "https://learn.microsoft.com/en-us/purview/dlp-learn-about-dlp" }],
   },
   {
-    slug: "azure-monitor-and-sentinel", title: "Azure Monitor, Log Analytics and Sentinel", platform: "Shared", domain: "Security operations", description: "Build a deliberate telemetry path from source systems to owned detection, investigation, and response workflows.", componentIds: ["log-analytics", "sentinel", "defender-xdr"], questionIds: ["LOG-01", "LOG-02", "LOG-03", "M365-XDR-01"], verified: "2026-10-19",
+    slug: "azure-monitor-and-sentinel", title: "Azure Monitor, Log Analytics and Sentinel", platform: "Shared", domain: "Security operations", description: "Build a deliberate telemetry path from source systems to owned detection, investigation, and response workflows.", componentIds: ["log-analytics", "sentinel", "defender-xdr"], questionIds: ["LOG-01", "LOG-02", "LOG-03", "M365-XDR-01"], updated: "2026-10-19",
     sections: [
       { title: "Executive explanation", paragraphs: ["Azure Monitor and Log Analytics collect and query selected operational data. Microsoft Sentinel provides SIEM and security orchestration capabilities over configured data sources. Microsoft Defender XDR has its own cross-product incident workspace. They integrate but are not interchangeable products."] },
       { title: "Architecture and data flow", paragraphs: ["Select sources and log categories based on investigation use cases. Configure diagnostic settings or supported connectors, assign workspace access, plan retention and ingestion cost, and validate that event fields support the intended detection. Route alerts to an owned queue with severity and escalation context."] },
