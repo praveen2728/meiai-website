@@ -37,7 +37,7 @@ export default function UseCaseDemo({ useCase }: { useCase: UseCase }) {
       </section>
 
       <section className="border-y border-white/5 bg-[#0a1220]"><div className="mx-auto grid max-w-7xl gap-4 px-5 py-10 md:grid-cols-[1fr_2fr] md:px-8"><h2 className="text-sm font-semibold text-slate-200">Scope and limitations</h2><p className="text-sm leading-6 text-slate-400">{useCase.limitations}</p></div></section>
-      <footer className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-xs text-slate-500 md:px-8"><span>MeiAI · Security engineering demonstrations</span><Link href="/lab" className="text-cyan-200 hover:text-white">Explore the AI Security Lab →</Link></footer>
+      <footer className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-xs text-slate-500 md:px-8"><span>MeiAI · Security engineering demonstrations</span><Link href="/security-assessment" className="text-cyan-200 hover:text-white">Open Security Assessment →</Link></footer>
     </main>
   );
 }
