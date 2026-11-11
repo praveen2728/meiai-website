@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import SiteNavigation from "@/components/SiteNavigation";
 import {
   controlStatuses,
+  createBlankSimulatorState,
   deriveSimulatorFindings,
   environmentProfiles,
   getRelevantControls,
@@ -67,7 +68,7 @@ const iconFor: Record<string, string> = {
 };
 const quickCategory = (id: string) => id.startsWith("M365-IAM") || id.startsWith("M365-ADM") ? "Identity and access" : id.startsWith("M365-EXO") ? "Email and collaboration" : id.startsWith("M365-SPO") || id.startsWith("M365-OD") || id.startsWith("M365-TEAM") ? "Collaboration and data" : id.startsWith("M365-END") ? "Endpoint security" : id.startsWith("M365-DATA") || id.startsWith("M365-DLP") || id.startsWith("M365-AUD") ? "Data protection" : id.startsWith("M365-XDR") || id.startsWith("M365-CAS") || id.startsWith("M365-ID") || id.startsWith("M365-IR") ? "Security monitoring" : id.startsWith("M365") ? "Cloud governance" : id.startsWith("IAM") ? "Identity and access" : id.startsWith("NET") ? "Network security" : id.startsWith("DATA") ? "Data protection" : id.startsWith("LOG") || id.startsWith("POST") ? "Security monitoring" : "Cloud governance";
 const environmentLabel: Record<EnvironmentProfile, string> = {
-  startup: "Small Azure environment", "landing-zone": "Enterprise landing zone", hybrid: "Hybrid environment", "multi-subscription": "Multi-subscription environment",
+  custom: "Custom / not specified", startup: "Small Azure environment", "landing-zone": "Enterprise landing zone", hybrid: "Hybrid environment", "multi-subscription": "Multi-subscription environment",
 };
 const workloadLabel: Record<WorkloadProfile, string> = {
   "web-app": "Web application", "data-analytics": "Data platform", containers: "Containerized application", "identity-centric": "Enterprise workloads", "hybrid-workloads": "Hybrid workloads",
@@ -94,7 +95,7 @@ export default function AzureSecuritySimulator({ initialControl, initialComponen
   const [showAdvancedQuestions, setShowAdvancedQuestions] = useState(false);
   const [showAllFindings, setShowAllFindings] = useState(false);
   const [showReportOptions, setShowReportOptions] = useState(false);
-  const [selectedComponent, setSelectedComponent] = useState("entra");
+  const [selectedComponent, setSelectedComponent] = useState("");
   const [relationshipFrom, setRelationshipFrom] = useState("");
   const [relationshipTo, setRelationshipTo] = useState("");
   const [relationshipKind, setRelationshipKind] = useState<RelationshipKind>("Data access");
@@ -108,10 +109,11 @@ export default function AzureSecuritySimulator({ initialControl, initialComponen
     const frame = window.requestAnimationFrame(() => {
       try {
         const saved = localStorage.getItem("meiai-azure-simulator-v1");
-        if (saved) setState(normalizeSimulatorState(JSON.parse(saved)));
+        if (saved) { const restored = normalizeSimulatorState(JSON.parse(saved)); setState(restored.workloads.length || restored.components.length || Object.keys(restored.statuses).length ? restored : createBlankSimulatorState(restored.platform ?? "azure")); }
+        else setState(createBlankSimulatorState());
         const savedArchitecture = localStorage.getItem("meiai-architecture-draft-v1");
         if (savedArchitecture) setBuilderDraft(normalizeSimulatorState(JSON.parse(savedArchitecture)));
-      } catch { /* Ignore a malformed local draft. */ }
+      } catch { setState(createBlankSimulatorState()); }
       setHydrated(true);
     });
     return () => window.cancelAnimationFrame(frame);
@@ -188,11 +190,10 @@ export default function AzureSecuritySimulator({ initialControl, initialComponen
     setSelectedComponent(id);
   }
   function setPlatform(platform: NonNullable<SimulatorState["platform"]>) {
-    const azureDefaults = ["entra", "vnet", "nsg", "waf", "app-service", "sql", "storage", "key-vault", "private-endpoint", "defender", "log-analytics"];
-    const m365Defaults = ["entra", "m365-tenant", "exchange-online", "sharepoint-online", "onedrive", "teams"];
-    const components = platform === "azure" ? azureDefaults : platform === "m365" ? m365Defaults : [...new Set([...azureDefaults, ...m365Defaults])];
+    const compatible = new Set(simulatorComponents.filter((component) => platform === "combined" || (platform === "m365" ? component.platform === "m365" || component.platform === "shared" : component.platform !== "m365")).map((component) => component.id));
+    const components = state.components.filter((id) => compatible.has(id));
     change({ platform, components, relationships: (state.relationships ?? []).filter((item) => components.includes(item.from) && components.includes(item.to)) });
-    if (!components.includes(selectedComponent)) setSelectedComponent(components[0] ?? "entra");
+    if (!components.includes(selectedComponent)) setSelectedComponent(components[0] ?? "");
     const firstQuestion = platform === "m365" ? "M365-IAM-01" : "IAM-01";
     setActiveCategory(quickCategory(firstQuestion));
     setComponentCategory(platform === "m365" ? "Collaboration" : "Applications");
@@ -249,7 +250,7 @@ export default function AzureSecuritySimulator({ initialControl, initialComponen
     <SiteNavigation />
     <div className="mx-auto max-w-7xl px-5 pb-8 pt-10 md:px-8 md:pt-16">
       <div className="grid items-end gap-8 lg:grid-cols-[1fr_.8fr]">
-        <div><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-800">MeiAI · Cloud security lab</p><h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-6xl">Azure + Microsoft 365<br className="hidden sm:block" /> Security Simulator</h1><p className="mt-4 max-w-2xl text-lg leading-7 text-slate-600">Explore your architecture, assess relevant security controls, and compare your reported state with a proposed target.</p>
+        <div><p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-800">MeiAI · Cloud security engineering</p><h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-6xl">Azure + Microsoft 365<br className="hidden sm:block" /> Security Assessment</h1><p className="mt-4 max-w-2xl text-lg leading-7 text-slate-600">Explore your architecture, assess relevant security controls, and compare your reported state with a proposed target.</p>
           <div className="mt-6 flex flex-wrap gap-3"><button onClick={() => begin("assess")} className="rounded-full bg-[#163e2e] px-6 py-3 font-semibold text-white hover:bg-[#245a41]">Assess My Security</button><button onClick={() => begin("build")} className="rounded-full border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-800 hover:border-slate-500">Design My Security Architecture</button></div>
           <p className="mt-3 text-xs text-slate-500">Self-assessment from your answers. No Azure or Microsoft 365 tenant connection or live scan.</p>
         </div>
@@ -308,7 +309,7 @@ export default function AzureSecuritySimulator({ initialControl, initialComponen
       <section className="mt-7 rounded-3xl border border-slate-200 bg-white p-5 md:p-7"><p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-800">Remediation roadmap</p><h3 className="mt-2 text-2xl font-semibold">What to improve next</h3><p className="mt-2 text-sm text-slate-600">Priorities are based on reported answers and the simulator’s deterministic rules.</p><div className="mt-5 grid gap-4 lg:grid-cols-3">{(["Immediate", "Near-term", "Planned"] as const).map((priority) => { const list = findings.filter((item) => item.priority === priority); return <div key={priority} className="rounded-2xl bg-slate-50 p-4"><h4 className="font-semibold">{priority === "Immediate" ? "Fix first" : priority === "Near-term" ? "Improve next" : "Plan ahead"}</h4><div className="mt-3 space-y-3">{list.length ? list.map((item) => <RoadmapItem key={item.id} item={item} />) : <p className="text-sm leading-6 text-slate-500">No reported control gap falls into this group.</p>}</div></div>; })}</div><p className="mt-4 text-xs leading-5 text-slate-500">Validate licensing, cost, service fit, ownership, change windows and dependencies before implementing recommendations.</p></section>
 
       <section className="mt-7 rounded-3xl border border-slate-200 bg-white p-5 md:p-7"><p className="text-xs font-bold uppercase tracking-[.16em] text-emerald-800">Detailed assessment and report</p><h3 className="mt-2 text-2xl font-semibold">Technical details when you need them</h3><details className="mt-4 rounded-xl border border-slate-200"><summary className="cursor-pointer px-4 py-3 text-sm font-semibold">Inspect all applicable controls and framework references ({controls.length})</summary><div className="divide-y divide-slate-100 px-4">{controls.map((item) => <article key={item.id} className="py-4"><div className="flex flex-col justify-between gap-3 sm:flex-row"><div><p className="text-xs text-slate-500">{item.id} · {item.domain}</p><h4 className="mt-1 font-semibold">{QUICK_QUESTIONS[item.id] ?? item.name}</h4><p className="mt-1 text-sm leading-6 text-slate-600">{item.question}</p></div><label className="shrink-0 text-xs font-semibold">Reported answer<select value={state.statuses[item.id] ?? "unknown"} onChange={(event) => setAnswer(item.id, event.target.value as ControlStatus)} className="mt-1 block rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm">{controlStatuses.filter((option) => option.id !== "na" || state.statuses[item.id] === "na").map((option) => <option key={option.id} value={option.id}>{statusNames[option.id]}</option>)}</select></label></div><details className="mt-2 text-sm"><summary className="cursor-pointer font-semibold text-emerald-800">Implementation and validation details</summary><div className="mt-2 space-y-2 leading-6 text-slate-600"><p><b className="text-slate-800">Risk considered:</b> {item.risk}</p><p><b className="text-slate-800">Suggested remediation:</b> {item.remediation}</p><p><b className="text-slate-800">Validation:</b> {item.validation}</p><p><b className="text-slate-800">Framework topic references:</b> {item.frameworks.join(" · ")}. {simulatorReferenceNote}</p><p className="flex flex-wrap gap-3">{item.references.map((ref) => <a key={ref.url} href={ref.url} target="_blank" rel="noreferrer" className="font-medium text-emerald-800 underline">{ref.label} ↗</a>)}</p></div></details></article>)}</div></details>
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5"><p className="max-w-2xl text-xs leading-5 text-slate-500">Reports include the detailed checklist, unknown answers, findings, user-described relationships, recommendations and proposed architecture. Self-assessment only; no tenant queried.</p><div className="flex gap-2"><button onClick={() => setShowReportOptions(true)} className="rounded-full bg-[#163e2e] px-5 py-3 text-sm font-semibold text-white hover:bg-[#245a41]">Download Assessment Report</button><button onClick={() => { if (window.confirm("Clear this browser's simulator draft and restore the example environment?")) { localStorage.removeItem("meiai-azure-simulator-v1"); setState(initialSimulatorState); setStep(1); setShowAdvancedQuestions(false); } }} className="rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700">Reset</button></div></div>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5"><p className="max-w-2xl text-xs leading-5 text-slate-500">Reports include the detailed checklist, unknown answers, findings, user-described relationships, recommendations and proposed architecture. Self-assessment only; no tenant queried.</p><div className="flex gap-2"><button onClick={() => setShowReportOptions(true)} className="rounded-full bg-[#163e2e] px-5 py-3 text-sm font-semibold text-white hover:bg-[#245a41]">Download Assessment Report</button><button onClick={() => { if (window.confirm("Clear this browser's assessment draft and start with a blank scope?")) { localStorage.removeItem("meiai-azure-simulator-v1"); setState(createBlankSimulatorState()); setStep(1); setShowAdvancedQuestions(false); } }} className="rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700">Reset</button></div></div>
       </section>
     </section>}
 

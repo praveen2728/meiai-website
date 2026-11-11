@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import AzureSecuritySimulator from "@/components/AzureSecuritySimulator";
 
 export const metadata: Metadata = {
-  title: "Azure Security Simulator | MeiAI",
+  title: "Cloud Security Assessment | MeiAI",
   description: "Model Azure architecture, report security control posture, inspect potential gaps, and plan a proposed target state. No tenant connection required.",
 };
 

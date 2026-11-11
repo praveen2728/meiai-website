@@ -1,7 +1,7 @@
 import { m365Components, m365Controls } from "./m365SecurityData.ts";
 import { selectApplicableQuestions } from "./securityAssessmentEngine.ts";
 
-export type EnvironmentProfile = "startup" | "landing-zone" | "hybrid" | "multi-subscription";
+export type EnvironmentProfile = "custom" | "startup" | "landing-zone" | "hybrid" | "multi-subscription";
 export type WorkloadProfile = "web-app" | "data-analytics" | "containers" | "identity-centric" | "hybrid-workloads";
 export type PlatformScope = "azure" | "m365" | "combined";
 export type ProductPlatform = "azure" | "m365" | "shared";
@@ -84,6 +84,7 @@ export interface SimulatorFinding {
 }
 
 export const environmentProfiles: { id: EnvironmentProfile; name: string; detail: string }[] = [
+  { id: "custom", name: "Custom / not specified", detail: "Start without assuming a user count, topology or workload profile." },
   { id: "startup", name: "Startup or small Azure environment", detail: "A compact subscription and workload footprint with a small platform team." },
   { id: "landing-zone", name: "Enterprise Azure landing zone", detail: "A governed platform with shared identity, networking, policy and security operations." },
   { id: "hybrid", name: "Hybrid environment", detail: "Azure workloads connected to on-premises services or another network boundary." },
@@ -212,6 +213,22 @@ export const initialSimulatorState: SimulatorState = {
   unsureQuestions: [],
   skippedQuestions: [],
 };
+
+export function createBlankSimulatorState(platform: PlatformScope = "azure"): SimulatorState {
+  return {
+    ...initialSimulatorState,
+    platform,
+    environment: "custom",
+    workloads: [],
+    components: [],
+    statuses: {},
+    relationships: [],
+    licenses: [],
+    licensePopulations: {},
+    unsureQuestions: [],
+    skippedQuestions: [],
+  };
+}
 
 export function normalizeSimulatorState(value: unknown): SimulatorState {
   if (!value || typeof value !== "object") return structuredClone(initialSimulatorState);

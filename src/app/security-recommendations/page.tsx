@@ -5,9 +5,9 @@ import SiteNavigation from "@/components/SiteNavigation";
 
 export const metadata: Metadata = {
   title: "Security Recommendations | MeiAI",
-  description: "Practical, source-linked security recommendations for cloud, AI, and security operations teams.",
+  description: "Practical, source-linked security recommendations for cloud security and security operations teams.",
   alternates: { canonical: "/security-recommendations" },
-  openGraph: { title: "Security Recommendations | MeiAI", description: "Practical, source-linked security recommendations for cloud, AI, and security operations teams.", type: "website" },
+  openGraph: { title: "Security Recommendations | MeiAI", description: "Practical, source-linked security recommendations for cloud security and security operations teams.", type: "website" },
 };
 
 export default function SecurityRecommendationsPage() {

@@ -186,6 +186,6 @@ export default function AzureJourney(){
 
       {tab==="cost"&&<CostEstimator profiles={state.costs} onProfileChange={updateCost} onScopeChange={scope=>{changeScope(scope);updateCost(0,"scope",scope);}} />}
     </div>
-    <footer className="border-t border-stone-200 bg-white px-5 py-8"><div className="mx-auto flex max-w-[1480px] flex-wrap items-center justify-between gap-4"><p className="text-sm text-stone-600">MeiAI · Cloud & AI Security Engineering Lab</p><p className="text-sm text-stone-500">Reference and planning material · no live tenant connection</p><Link href="/" className="text-sm text-emerald-900 underline underline-offset-4">Back to meiai.in</Link></div></footer>
+    <footer className="border-t border-stone-200 bg-white px-5 py-8"><div className="mx-auto flex max-w-[1480px] flex-wrap items-center justify-between gap-4"><p className="text-sm text-stone-600">MeiAI · Cloud Security Engineering Platform</p><p className="text-sm text-stone-500">Reference and planning material · no live tenant connection</p><Link href="/" className="text-sm text-emerald-900 underline underline-offset-4">Back to meiai.in</Link></div></footer>
   </main>;
 }

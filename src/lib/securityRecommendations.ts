@@ -66,7 +66,7 @@ This is a review template, not an Azure command or a prescribed role assignment.
       { label: "Understand Azure role assignments", url: "https://learn.microsoft.com/en-us/azure/role-based-access-control/role-assignments" },
       { label: "Best practices for Azure RBAC", url: "https://learn.microsoft.com/en-us/azure/role-based-access-control/best-practices" },
     ],
-    relatedSlugs: ["investigate-sign-in-events", "bound-ai-agent-permissions"],
+    relatedSlugs: ["scope-azure-role-assignments"],
     relatedProjects: [{ label: "Azure Cloud Security Journey", href: "/labs/azure-security-journey" }],
   },
   {
@@ -112,56 +112,98 @@ Microsoft Entra sign-in logs contain fields that help administrators understand 
       { label: "Microsoft Entra monitoring and health documentation", url: "https://learn.microsoft.com/en-us/entra/identity/monitoring-health/" },
       { label: "Logs available for streaming from Microsoft Entra ID", url: "https://learn.microsoft.com/en-us/entra/identity/monitoring-health/concept-diagnostic-settings-logs-options" },
     ],
-    relatedSlugs: ["scope-azure-role-assignments", "bound-ai-agent-permissions"],
+    relatedSlugs: ["scope-azure-role-assignments", "investigate-sign-in-events"],
     relatedProjects: [{ label: "Detection & SOC Lab", href: "/detection-soc" }],
   },
+
   {
-    title: "Keep AI agent identities and tools inside explicit boundaries",
-    slug: "bound-ai-agent-permissions",
-    summary: "Treat prompts, retrieved content, identities, and tool calls as separate security boundaries when planning an agent integration.",
-    publishedAt: "2026-10-11",
-    lastReviewedAt: "2026-10-11",
-    category: "AI security",
-    tags: ["AI agents", "tool permissions", "prompt injection"],
+    title: "Replace long-lived AWS workload keys with scoped temporary credentials",
+    slug: "aws-temporary-workload-credentials",
+    summary: "Plan workload access around IAM roles, federation, short-lived credentials, and least-privilege policy review.",
+    publishedAt: "2026-11-11",
+    lastReviewedAt: "2026-11-11",
+    category: "AWS identity",
+    tags: ["AWS IAM", "workload identity", "temporary credentials"],
     status: "Published",
     body: `## Recommendation
 
-Design an AI agent so that a model response cannot grant itself authority. Keep authorization in the application and tool layer, use an identity with narrowly scoped permissions, and make sensitive actions observable and reviewable.
+Prefer short-lived role credentials for workloads over long-lived IAM user access keys. Scope each workload identity to the actions and resources it needs, and keep trust relationships explicit and reviewable.
 
 ## A review sequence
 
-1. List each data source and tool the agent can reach. Record the identity used, permitted operations, data boundary, and accountable owner.
-2. Give the agent or its calling service only the permissions required for the intended workflow. Enforce access in the service or tool, not only in a system prompt.
-3. Treat user input and retrieved documents as untrusted content. Define how the application separates instructions from data and how it handles unsafe or irrelevant tool requests.
-4. Add confirmation or a human approval step for consequential actions. Prefer read-only capability until the workflow and its authorization checks have been reviewed.
-5. Capture the request, relevant retrieved-source identifiers, tool choice, authorization outcome, and action result where the system permits. Protect these logs as sensitive data.
-6. Test expected use, unauthorized tool requests, cross-user data boundaries, and untrusted instructions in an isolated or synthetic environment. Retest after changes to tools, prompts, identity, or retrieval.
+1. Inventory workloads, execution environments, resource access, owners, and any existing access keys. Do not rotate or remove a key until its dependency and recovery path are understood.
+2. For AWS-hosted workloads, identify an IAM role delivery mechanism supported by the compute service. For external workloads, evaluate federation such as OIDC or SAML, IAM Roles Anywhere, or a service-specific integration that issues temporary credentials.
+3. Define a narrow trust policy and permissions policy. Review principals, actions, resources, and conditions separately; avoid wildcard permissions unless a documented technical requirement justifies them.
+4. Test the workload's intended operations and expected denials in a non-production environment. Check that the credential source is temporary and that the application does not fall back to a static key.
+5. Remove an old key only after owner confirmation, usage review, deployment validation, and a rollback plan. Record exceptions with an owner and expiry.
 
 ## What to validate
 
-- Tool endpoints enforce the caller’s authorization independently of model-generated text.
-- The agent cannot use another user’s data through a direct identifier or alternate tool path.
-- Consequential actions require the expected approval and have an attributable result.
-- The test record distinguishes attempted behavior from a tool action that actually executed.
+- The workload assumes the intended role from an explicitly trusted principal.
+- Credentials are temporary where supported and are not written to source, images, logs, or browser storage.
+- The identity can perform the intended operations and is denied unrelated actions in representative tests.
+- Access Analyzer findings, role trust, policy changes, and key exceptions receive owner review.
 
-## Common mistakes
+## Common failure modes and limitations
 
-- Assuming that a refusal proves a backend tool was never called.
-- Giving an agent broad credentials because a prompt says it should act safely.
-- Trusting retrieved documents as instructions or allowing them to silently change tool permissions.
-- Logging secrets or personal data while trying to improve observability.
+A role with an overly broad policy is still overprivileged. Federation trust conditions that are too broad can let an unintended workload assume a role. Removing keys without checking deployment dependencies can cause outages. Temporary credentials reduce key lifetime; they do not prevent a compromised authorized workload from misusing its active permissions.
 
-## Scope boundary
+## Scope
 
-These recommendations are design and test guidance. A prompt-only test cannot establish the permissions, hidden tool calls, or data access of an agent that does not expose those traces. Report that evidence gap and test only systems for which you have authorization.`,
+This is architecture and review guidance. It does not inspect an AWS account or certify that a role is configured correctly. Validate current IAM behavior and service integration in the target account before rollout.`,
     references: [
-      { label: "Microsoft AI agent shared responsibility model", url: "https://learn.microsoft.com/en-us/azure/security/fundamentals/shared-responsibility-ai-agent" },
-      { label: "OWASP Top 10 for LLM Applications", url: "https://genai.owasp.org/llm-top-10/" },
-      { label: "MITRE ATLAS", url: "https://atlas.mitre.org/" },
+      { label: "Security best practices in IAM", url: "https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html" },
+      { label: "IAM roles terms and concepts", url: "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_terms-and-concepts.html" },
+      { label: "IAM Access Analyzer", url: "https://docs.aws.amazon.com/IAM/latest/UserGuide/what-is-access-analyzer.html" },
     ],
-    relatedSlugs: ["scope-azure-role-assignments", "investigate-sign-in-events"],
-    relatedProjects: [{ label: "Azure Security Journey", href: "/labs/azure-security-journey" }, { label: "AI Security Lab", href: "/lab" }],
+    relatedSlugs: ["investigate-sign-in-events", "scope-azure-role-assignments"],
+    relatedProjects: [{ label: "Architecture Studio", href: "/architecture-studio" }],
   },
+  {
+    title: "Build a governed Google Cloud resource hierarchy before onboarding workloads",
+    slug: "gcp-governed-resource-hierarchy",
+    summary: "Use organization, folder, project and policy boundaries to establish ownership and safe workload onboarding.",
+    publishedAt: "2026-11-11",
+    lastReviewedAt: "2026-11-11",
+    category: "Google Cloud governance",
+    tags: ["Google Cloud", "organization policy", "landing zone"],
+    status: "Published",
+    body: `## Recommendation
+
+Design the Google Cloud resource hierarchy and shared platform foundations before teams deploy production workloads. Make project ownership, policy inheritance, network boundaries, logging, and security responsibilities explicit.
+
+## A review sequence
+
+1. Identify the organization boundary, identity source, platform owners, workload teams, and required environments. Decide how folders and projects will express lifecycle, ownership, and policy inheritance.
+2. Define a small set of organization policies that express approved guardrails. Check the scope and inherited effects of each policy, and test exceptions before applying constraints broadly.
+3. Establish project creation and ownership workflows, labels, billing responsibilities, network patterns, and privileged access. Separate shared platform services from workload resources where the operating model requires it.
+4. Configure audit logging and central visibility for required projects and services. Define who can view, change, and retain logs, and verify that investigation queries can answer the priority use cases.
+5. Onboard one representative workload. Validate inherited policies, access, network reachability, logging, and incident ownership before expanding the foundation.
+
+## What to validate
+
+- Every production project has an accountable owner, approved location and intended parent folder.
+- Organization policies have documented scope, test results, exceptions and a review owner.
+- Privileged access follows least privilege, and service identities have a workload owner and lifecycle.
+- Required audit logs reach an appropriately protected destination and are available to responders.
+
+## Trade-offs and limitations
+
+A restrictive hierarchy can obstruct teams if policy intent and exception paths are unclear. A permissive hierarchy can allow inconsistent projects and unclear ownership. Google Cloud services and organization-policy constraints have different support and inheritance behavior, so verify each control against current service documentation rather than assuming uniform enforcement.
+
+## Scope
+
+This guidance describes design and review steps. MeiAI does not deploy a Google Cloud foundation or query an organization. Confirm applicability, permissions and change impact with the platform owners before implementation.`,
+    references: [
+      { label: "Enterprise foundations blueprint", url: "https://docs.cloud.google.com/architecture/blueprints/security-foundations" },
+      { label: "Use IAM securely", url: "https://docs.cloud.google.com/iam/docs/using-iam-securely" },
+      { label: "Organization Policy overview", url: "https://cloud.google.com/resource-manager/docs/organization-policy/overview" },
+      { label: "Cloud Audit Logs overview", url: "https://cloud.google.com/logging/docs/audit" },
+    ],
+    relatedSlugs: ["scope-azure-role-assignments"],
+    relatedProjects: [{ label: "Architecture Studio", href: "/architecture-studio" }],
+  },
+
 ];
 
 export function getRecommendation(slug: string) {

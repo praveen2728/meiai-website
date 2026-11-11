@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  createBlankSimulatorState,
   deriveSimulatorFindings,
   getRelevantControls,
   getTargetComponentIds,
@@ -11,6 +12,14 @@ import {
   simulatorControls,
   summarizeSimulator,
 } from '../src/lib/azureSimulator.ts';
+
+test('new customer assessment drafts start without a preconfigured scenario', () => {
+  const draft = createBlankSimulatorState();
+  assert.equal(draft.environment, 'custom');
+  assert.deepEqual(draft.workloads, []);
+  assert.deepEqual(draft.components, []);
+  assert.deepEqual(draft.statuses, {});
+});
 
 test('unknown and not-applicable answers are not treated as passes or findings', () => {
   const state = structuredClone(initialSimulatorState);

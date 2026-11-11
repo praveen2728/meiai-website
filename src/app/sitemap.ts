@@ -9,7 +9,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/labs/azure-security-journey", "weekly", 0.9],
     ["/azure-security-simulator", "weekly", 0.9],
     ["/learn", "weekly", 0.8],
-    ["/lab", "weekly", 0.9],
     ["/detection-soc", "monthly", 0.8],
     ["/multicloud", "monthly", 0.8],
     ["/cloud-security", "monthly", 0.8],
